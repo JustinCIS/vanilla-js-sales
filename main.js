@@ -5,18 +5,31 @@ window.onload = function(){
 class Dashboard {
 
   constructor() {
-        this.dashboardValue = {
+        this.dashboardValues = [];
+      this.dashboardValue = {
             id : 1,
             value : 0 
         }
+        this.dashboardValues.push(this.dashboardValue);
         this.salesElement = document.getElementById("dashbaordSales");
         this.salesWidget = new Widget(function(salesValue){
-            if (this.dashboardValue.id !== salesValue.id) {  // Make sure they aren't adding a value which has already been added to support future updating.
+            var foundValueId = this.dashboardValues.find(val => {
+                return val.id == salesValue.id;
+            });
+            if (foundValueId !== salesValue.id) {  // Make sure they aren't adding a value which has already been added to support future updating.
                 console.log("sales updated!");
                 this.dashboardValue = salesValue;
-                this.salesElement.innerHTML = this.dashboardValue.value;
+                this.dashboardValues.push({ id: this.dashboardValue.id, value: this.dashboardValue.value });
+                var sum = this.dashboardValues.reduce((a, b) => {
+                    return a + b.value;
+                }, 0);
+                var audit = this.dashboardValues.map(val => {
+                    return '<br>-Sale #:' + val.id + ': ' + val.value;
+                });
+                console.debug(audit);
+                this.salesElement.innerHTML = audit.join('') + (sum < 0 ? ('<span style=\'color:red\'><br><br>Total: ' + sum + '</span>') : ('<br><br>Total: ' + sum));
             }
-        });
+        }.bind(this));
     }
 }
 
@@ -33,8 +46,8 @@ class Widget {
         this.input = document.getElementById("widgetText");
         this.button = document.getElementById("widgetButton");
         this.button.addEventListener("click", function() {
-            this.AddSales(this.input.value);
-        });
+            this.AddSales(parseInt(this.input.value));
+        }.bind(this));
     }
 
     AddSales(value)
